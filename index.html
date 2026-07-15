@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SD-NAT — Équipes de Recherche, Sauvetage et Déblaiement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#101826;
+  --ink-soft:#3a4558;
+  --muted:#68738a;
+  --line:#e2e6ee;
+  --line-soft:#edf0f5;
+  --paper:#f4f6f9;
+  --card:#ffffff;
+  --sidebar:#0d1420;
+  --sidebar-soft:#151f30;
+  --sidebar-line:#232f45;
+  --sidebar-text:#aab4c8;
+  --accent:#c81e2c;
+  --accent-dark:#9c1521;
+  --accent-soft:#fce8e9;
+  --lourde:#b3261e;
+  --lourde-soft:#fbeceb;
+  --moyenne:#b5760f;
+  --moyenne-soft:#fbf1e0;
+  --legere:#1b7a5b;
+  --legere-soft:#e7f4ef;
+  --ok:#1b7a5b;
+  --warn:#b5760f;
+  --danger:#b3261e;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,38,.04), 0 6px 20px -8px rgba(16,24,38,.12);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+h1,h2,h3,h4{font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:.2px; margin:0;}
+.app{display:flex; min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:250px; flex-shrink:0; background:var(--sidebar); color:var(--sidebar-text);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+}
+.brand{
+  padding:22px 20px 18px; border-bottom:1px solid var(--sidebar-line);
+}
+.brand .mark{
+  display:flex; align-items:center; gap:10px; margin-bottom:4px;
+}
+.brand .mark .dot{
+  width:10px;height:10px;border-radius:2px;background:var(--accent);
+  box-shadow:0 0 0 3px rgba(200,30,44,.18);
+}
+.brand h1{color:#fff; font-size:19px; letter-spacing:.5px;}
+.brand p{margin:4px 0 0; font-size:11.5px; color:#7c869c; letter-spacing:.3px; text-transform:uppercase;}
+
+nav.navlist{padding:14px 12px; flex:1; overflow-y:auto;}
+nav.navlist .navgroup-label{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:#5b6884;
+  padding:14px 10px 6px;
+}
+nav.navlist button{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  background:none; border:none; color:var(--sidebar-text); font-size:14px; font-family:inherit;
+  padding:10px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px;
+}
+nav.navlist button svg{width:16px;height:16px; flex-shrink:0; opacity:.8;}
+nav.navlist button:hover{background:var(--sidebar-soft); color:#fff;}
+nav.navlist button.active{background:var(--accent); color:#fff;}
+nav.navlist button.active svg{opacity:1;}
+nav.navlist button .count{
+  margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#7c869c; background:#0006;
+  padding:1px 6px; border-radius:20px;
+}
+nav.navlist button.active .count{color:#fff; background:rgba(255,255,255,.22);}
+
+.sidebar-foot{padding:14px 20px; border-top:1px solid var(--sidebar-line); font-size:11px; color:#5b6884;}
+
+/* ---------- Main ---------- */
+main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:16px 28px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;
+}
+.topbar h2{font-size:22px;}
+.topbar .sub{color:var(--muted); font-size:13px; margin-top:2px;}
+.topbar-actions{display:flex; gap:10px;}
+.content{padding:24px 28px 60px; flex:1;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:7px; font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
+  padding:9px 15px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink-soft);
+  cursor:pointer; transition:.12s; white-space:nowrap;
+}
+.btn:hover{border-color:#c7cedb; background:#fafbfd;}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+.btn.primary:hover{background:var(--accent-dark); border-color:var(--accent-dark);}
+.btn.ghost{border-color:transparent; background:transparent;}
+.btn.ghost:hover{background:var(--line-soft);}
+.btn.sm{padding:6px 10px; font-size:12.5px;}
+.btn.danger{color:var(--danger); border-color:#f0d3d1;}
+.btn.danger:hover{background:var(--lourde-soft);}
+.btn svg{width:14px;height:14px;}
+
+/* ---------- Cards / KPI ---------- */
+.grid-kpi{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:22px;}
+.kpi{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+.kpi .label{font-size:11.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:600;}
+.kpi .value{font-family:'Oswald',sans-serif; font-size:32px; margin-top:6px; color:var(--ink);}
+.kpi .value small{font-size:14px; color:var(--muted); font-family:'Inter',sans-serif; font-weight:500;}
+.kpi .foot{font-size:12px; color:var(--muted); margin-top:4px;}
+.kpi.accent-lourde .value{color:var(--lourde);}
+.kpi.accent-moyenne .value{color:var(--moyenne);}
+.kpi.accent-legere .value{color:var(--legere);}
+
+.panel{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:20px;}
+.panel-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line-soft);}
+.panel-head h3{font-size:15px;}
+.panel-head .hint{font-size:12px; color:var(--muted); font-family:'Inter';font-weight:400;}
+.panel-body{padding:18px;}
+
+.two-col{display:grid; grid-template-columns:1.3fr 1fr; gap:18px;}
+@media(max-width:980px){.two-col{grid-template-columns:1fr;}}
+
+/* bar rows */
+.barrow{display:grid; grid-template-columns:150px 1fr 46px; align-items:center; gap:10px; margin-bottom:10px; font-size:12.5px;}
+.barrow .name{color:var(--ink-soft); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.barrow .track{background:var(--line-soft); border-radius:6px; height:9px; overflow:hidden;}
+.barrow .fill{height:100%; border-radius:6px;}
+.barrow .num{text-align:right; font-family:'IBM Plex Mono'; color:var(--muted);}
+
+.badge{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:600;}
+.badge.lourde{background:var(--lourde-soft); color:var(--lourde);}
+.badge.moyenne{background:var(--moyenne-soft); color:var(--moyenne);}
+.badge.legere{background:var(--legere-soft); color:var(--legere);}
+.badge::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor;}
+
+.badge.status-ok{background:var(--legere-soft); color:var(--legere);}
+.badge.status-warn{background:var(--moyenne-soft); color:var(--moyenne);}
+.badge.status-missing{background:#eceef2; color:var(--muted);}
+.badge.status-expired{background:var(--lourde-soft); color:var(--lourde);}
+
+/* ---------- Equipes ---------- */
+.tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+.tabs button{
+  font-family:'Inter'; font-size:13px; font-weight:600; padding:8px 14px; border-radius:8px; border:1px solid var(--line);
+  background:#fff; color:var(--ink-soft); cursor:pointer;
+}
+.tabs button.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+.team-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px;}
+.team-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
+.team-card .tc-head{padding:14px 16px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+.team-card .tc-head h4{font-size:14.5px; line-height:1.3;}
+.team-card .tc-head .region{font-size:11.5px; color:var(--muted); margin-top:3px;}
+.team-card .tc-stats{display:flex; gap:14px; padding:12px 16px; font-size:12px; color:var(--muted); border-bottom:1px solid var(--line-soft);}
+.team-card .tc-stats b{color:var(--ink); font-family:'IBM Plex Mono'; font-size:13px; display:block;}
+.team-card .tc-vehicles{padding:12px 16px; font-size:12px;}
+.team-card .tc-vehicles .veh{display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-soft); color:var(--ink-soft);}
+.team-card .tc-vehicles .veh:last-child{border-bottom:none;}
+.team-card .tc-vehicles .veh .im{color:var(--muted); font-family:'IBM Plex Mono'; font-size:11px;}
+.team-card .tc-foot{padding:10px 16px; background:var(--line-soft);}
+.team-card .tc-foot a{font-size:12.5px; font-weight:600; color:var(--accent); cursor:pointer; text-decoration:none;}
+
+/* ---------- Table ---------- */
+.filters{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:center;}
+.filters input[type=text], .filters select{
+  font-family:'Inter'; font-size:13px; padding:9px 12px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink);
+}
+.filters input[type=text]{min-width:220px;}
+.filters .spacer{flex:1;}
+.filters .resultcount{font-size:12.5px; color:var(--muted);}
+
+table.data{width:100%; border-collapse:collapse; font-size:13px;}
+table.data thead th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted);
+  padding:10px 12px; border-bottom:2px solid var(--line); background:var(--line-soft); position:sticky; top:0;
+  cursor:pointer; user-select:none; white-space:nowrap;
+}
+table.data thead th:hover{color:var(--ink);}
+table.data tbody td{padding:10px 12px; border-bottom:1px solid var(--line-soft); vertical-align:middle;}
+table.data tbody tr:hover{background:#fafbfd;}
+table.data .name-cell{font-weight:600; color:var(--ink);}
+table.data .sub-cell{font-size:11.5px; color:var(--muted);}
+.table-scroll{overflow-x:auto; border-radius:var(--radius);}
+.actions-cell{display:flex; gap:6px;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(13,20,32,.55); display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:#fff; border-radius:14px; width:100%; max-width:640px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.35);
+}
+.modal-head{display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line);}
+.modal-head h3{font-size:17px;}
+.modal-body{padding:20px 22px;}
+.modal-foot{padding:16px 22px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;}
+.form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.form-grid .full{grid-column:1/-1;}
+.field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+.field input, .field select, .field textarea{
+  width:100%; font-family:'Inter'; font-size:13.5px; padding:9px 11px; border-radius:8px; border:1px solid var(--line); background:#fbfcfd;
+}
+.field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent);}
+.field.section-label{grid-column:1/-1; margin-top:4px; padding-top:10px; border-top:1px dashed var(--line);}
+.field.section-label span{font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--accent); font-weight:700;}
+
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:6px;display:flex;}
+.icon-btn:hover{background:var(--line-soft); color:var(--ink);}
+
+.toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff;
+  padding:11px 20px; border-radius:9px; font-size:13.5px; opacity:0; transition:.25s; z-index:200; box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:8px;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+.empty-state{text-align:center; padding:60px 20px; color:var(--muted);}
+.empty-state svg{width:40px;height:40px; margin-bottom:12px; opacity:.5;}
+
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-thumb{background:#ccd3e0; border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+@media(max-width:860px){
+  .sidebar{position:fixed; left:-260px; z-index:50; transition:.2s; box-shadow:0 0 0 2000px rgba(0,0,0,0);}
+  .sidebar.open{left:0; box-shadow:0 0 0 2000px rgba(0,0,0,.4);}
+  .content{padding:16px;}
+  .topbar{padding:12px 16px;}
+  .form-grid{grid-template-columns:1fr;}
+}
+.hamburger{display:none; background:none; border:1px solid var(--line); border-radius:8px; padding:8px; cursor:pointer;}
+@media(max-width:860px){.hamburger{display:flex;}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="mark"><span class="dot"></span><h1>SD‑NAT</h1></div>
+      <p>Équipes recherche · sauvetage · déblaiement</p>
+    </div>
+    <nav class="navlist" id="navlist"></nav>
+    <div class="sidebar-foot">Base de données locale · <span id="footCount">—</span> effectifs</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="hamburger" id="hamburger">☰</button>
+        <div>
+          <h2 id="pageTitle">Tableau de bord</h2>
+          <div class="sub" id="pageSub">Vue d'ensemble des équipes nationales</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn" id="btnExport">Exporter JSON</button>
+        <button class="btn" id="btnImport">Importer JSON</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none">
+        <button class="btn primary" id="btnAddPerson">+ Ajouter personnel</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Fiche personnel</h3>
+      <button class="icon-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="modalCancel">Annuler</button>
+      <button class="btn danger" id="modalDelete" style="display:none;">Supprimer</button>
+      <button class="btn primary" id="modalSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const BASE_PEOPLE = [{"id":1,"nom":"TAJIRE LGHLIMI","grade":"CDT","fonction":"CHEF D'ETACHEMENT","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"VL CDT","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":2,"nom":"EDDIABY AHMED","grade":"ADJ","fonction":"CONDUCTEUR VL CDT","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"VL CDT","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":3,"nom":"ANOUAR MOUSTAPHA","grade":"A/C/M","fonction":"CHEF EQUIPE","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":4,"nom":"KADIRI KHALID","grade":"A/C","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":5,"nom":"BOUAASRIA AMINE","grade":"CAP/C","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":6,"nom":"CHHIBA MEHDI","grade":"CAP/C","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":7,"nom":"ERRBIB HAMZA","grade":"CAP","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":8,"nom":"TAYBI MOHAMED","grade":"CAP","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":9,"nom":"ROUIHINE ZOUHIR","grade":"CAP","fonction":"SAUVETEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"TRANSPORT DE TROUPE","immatriculation":"195180 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":10,"nom":"MSIKNI TARIQ","grade":"ADJ/CM","fonction":"CONDUCTEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"CAMION SD SITE 1","immatriculation":"224917 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":11,"nom":"BENALI JAOUAD","grade":"A/C","fonction":"MECANICIEN","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"CAMION SD SITE 1","immatriculation":"224917 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":12,"nom":"KHERAZ MED AMINE","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB MED","immatriculation":"238242 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":13,"nom":"SIHAMDI FOUZIA","grade":"DR","fonction":"MEDECIN","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB MED","immatriculation":"238242 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":14,"nom":"MEJHED KAOUTAR","grade":"INF","fonction":"INFERMIER","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB MED","immatriculation":"238242 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":15,"nom":"SELLAMI ZAKARIA","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB MED","immatriculation":"238242 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":16,"nom":"BENLASIRI BRAHIM","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB MED","immatriculation":"238242 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":17,"nom":"RKAB KARIM","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB EMT","immatriculation":"229496 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":18,"nom":"ZAHID ZAKARIA","grade":"ADJ","fonction":"CHEFB DE BORD","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB EMT","immatriculation":"229496 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":19,"nom":"BOUKHRISS ANASS","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"AMB EMT","immatriculation":"229496 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":20,"nom":"BEHLOUL REDOUANE","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":21,"nom":"EL AMRANI IMAD","grade":"CAP/C","fonction":"CONDECTEUR DE CHIEN","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":22,"nom":"NAJI MOHAMMED","grade":"CAP/C","fonction":"CONDECTEUR DE CHIEN","formation":"","region":"SALE (UMNI)","unite":"UMNI","categorie":"Lourde","equipe":"Equipe Lourde UMNI","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":23,"nom":"YOUNOUSS ABDELKARIM","grade":"CDT","fonction":"CHEF D'ETACHEMENT","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"VL CDT","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":24,"nom":"MAZRA ABDERRAHIM","grade":"A/C/M","fonction":"CHEF EQUIPE","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":25,"nom":"TAHIR ABDELATIF","grade":"ADJ","fonction":"R,TECHNIQUE","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":26,"nom":"MAMOUNI ABDERRAHIM","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":27,"nom":"HAMOUDA MOHAMED","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":28,"nom":"LAHDOUM ABDELFATAH","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":29,"nom":"RHOUNBAZ ANAS","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":30,"nom":"AIT OUMAZIGH SOUFIAN","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":31,"nom":"ACHAK YASSINE","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":32,"nom":"MOUJOUD ABDERRAHIM","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":33,"nom":"KARITAI KHALID","grade":"ADJ","fonction":"SAUVETEURS","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"TRANSPORT DE TROUPE 2","immatriculation":"195179 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":34,"nom":"RABEH SLIMANE","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"CAMION SD SITE 2","immatriculation":"224920 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":35,"nom":"SABRY MOHAMMED","grade":"ADJ/C","fonction":"CHEF MATERIEL","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"CAMION SD SITE 2","immatriculation":"224920 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":36,"nom":"RABEH MEHDI","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"AMB EMT","immatriculation":"229500 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":37,"nom":"ARROUB MOUHSSIN","grade":"ADJ","fonction":"CHEF DE BORD","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"AMB EMT","immatriculation":"229500 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":38,"nom":"DIMOKRATI ABDELKARIM","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"AMB EMT","immatriculation":"229500 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":39,"nom":"DABOUZI NABIL","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"…..","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":40,"nom":"DART SOUFIANE","grade":"ADJ","fonction":"CONDECTEUR DE CHIEN","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"…..","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":41,"nom":"AGUILOU ZOUHIR","grade":"CAP","fonction":"CONDECTEUR DE CHIEN","formation":"","region":"ENPC","unite":"ENPC","categorie":"Lourde","equipe":"Equipe Lourde ENPC","vehicule":"VL DE TRANSPORT DES CHIENS","immatriculation":"…..","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":42,"nom":"OUTRHIRHIT MUSTAPHA","grade":"LT/COL","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"VL CDT","immatriculation":"180417 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":43,"nom":"EL KAIDI SAAD","grade":"CNE","fonction":"ADJOINT CHEF DETACHEMENT","formation":"R.TECH","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":44,"nom":"LABYB AYOUB","grade":"CAP","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":45,"nom":"ZIOUANA KAMAL","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":46,"nom":"MOUNAFIS HASSAN","grade":"ADJ","fonction":"CHEF EQUIPE","formation":"R.TECH","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":47,"nom":"NTIDART AZZEDDINE","grade":"SGT/C","fonction":"ADJOINT CHEF EQUIPE","formation":"R.TECH","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":48,"nom":"CHIBANE MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":49,"nom":"MAZZI OUTMANE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"EMT","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":50,"nom":"HARDAZ BRAHIM","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":51,"nom":"TALIBI ZOUHAIR","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":52,"nom":"LAADAM MOUHCINE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":53,"nom":"BALAOUALI OUSSAMA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"EMT +IMP2","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":54,"nom":"ENNAJI OUSSAMA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"IMP2","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":55,"nom":"EL HALAOUY ANOUAR","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":56,"nom":"KHRIBACH EL MAKKI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":57,"nom":"LAADAM HASSA","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":58,"nom":"EZGAIBI YASSIN","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"EMT","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":59,"nom":"LITEM DRISS","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"CAMION BERCE SD","immatriculation":"174746 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":60,"nom":"ZAMHARIR AMINE","grade":"ADJ","fonction":"CHEF EQUIPE","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"CAMION BERCE SD","immatriculation":"174746 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":61,"nom":"ZERDANI KHALIL","grade":"SGT/C","fonction":"ADJOINT CHEF EQUIPE","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"CAMION BERCE SD","immatriculation":"174746 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":62,"nom":"MAGDER WALIDE","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"V S I","immatriculation":"196966 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":63,"nom":"SOUILI AHMED","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":64,"nom":"AITTALEB IBRAHIM","grade":"CAP","fonction":"BRANCARDIER","formation":"IMP2","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":65,"nom":"BENJANAH ABDELGHANI","grade":"CAP/C","fonction":"BRANCARDIER","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":66,"nom":"NOUALI EL KHALIL","grade":"CDT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"VL CDT","immatriculation":"180427 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":67,"nom":"JAZOULI MED MEHDI","grade":"LT","fonction":"ADJOINT CHEF DETACHEMENT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"VL CDT","immatriculation":"180427 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":68,"nom":"GARGABOU MOHAMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"VL CDT","immatriculation":"180427 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":69,"nom":"NAMOUS MOHAMED","grade":"ADJ","fonction":"CHEF EQUIPE","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":70,"nom":"EL BADRI MORAD","grade":"ADJ/C","fonction":"ADJOINT CHEF EQUIPE","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":71,"nom":"AZZOUZ ISSAM","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":72,"nom":"SALIM MOHAMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":73,"nom":"BENALI ZAKARIAE","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":74,"nom":"CHERIFI YOUSSEF","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":75,"nom":"HIBAOUI MOHAMMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":76,"nom":"ED-DYOUBA MOHAMED","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":77,"nom":"MEGHRAOUI MOHAMED","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":78,"nom":"NEGGAZ SAMIR","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":79,"nom":"OMARI SAID","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":80,"nom":"CHAOUCH ILYASS","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"156639 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":81,"nom":"DAROUICH ABDLHAMID","grade":"ADJ/C","fonction":"CONDUCTEUR ET MAGASINIER","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"CAMION BERCE SD","immatriculation":"137207 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":82,"nom":"HIBAOUI MED","grade":"ADJ","fonction":"CHEF EQUIPE","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"CAMION BERCE SD","immatriculation":"137207 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":83,"nom":"DRIAAOU RACHID","grade":"ADJ","fonction":"CONDUCTEUR","formation":"I.M.P 2","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"V S I","immatriculation":"195972 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":84,"nom":"DYOUBA MED","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"V S I","immatriculation":"195972 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":85,"nom":"CHADLI MOHAMMED","grade":"DR","fonction":"MEDECIN","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"AMB MEDICALISE","immatriculation":"238246 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":86,"nom":"LAACHAHCI AHMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"AMB MEDICALISE","immatriculation":"238246 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":87,"nom":"HAMDI KHALID","grade":"CAP/C","fonction":"BRANCARDIER","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI ORIENTAL","vehicule":"AMB MEDICALISE","immatriculation":"238246 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":88,"nom":"ABAZ ERRAHALI","grade":"CDT","fonction":"CHEF DETACHEMENT","formation":"GI-NRBC","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"VL CDT","immatriculation":"180430 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":89,"nom":"DAOUCH HICHAM","grade":"LT","fonction":"ADJOINT CHEF DETACHEMENT","formation":"F.F/SD2/NRBC/GI-NRBC","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"VL CDT","immatriculation":"180430 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":90,"nom":"DONJ YASSINE","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"VL CDT","immatriculation":"180430 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":91,"nom":"BOUHAFA MUSTAPHA","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":92,"nom":"FARIDI SALAH","grade":"ADJ/C","fonction":"CHEF EQUIPE 1","formation":"IMP1-2/TECH.PED/SAU.DEB","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":93,"nom":"TIZAKARINE SOUFIAN","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"IS.TECH1-2/UTILI.MAT DE RECH","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":94,"nom":"KAZZAR NOUREDDINE","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":95,"nom":"BOUASILA SALAHEDDINE","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":96,"nom":"BOULAOURAD ABDELJALIL","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":97,"nom":"BOUAALI MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":98,"nom":"EL MARRACH ISMAIL","grade":"ADJ/C","fonction":"RECHERCHE TECHNIQUE 2","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":99,"nom":"TOUFIQ IMAD","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"RIS.TECH1-2/E.M.T/UTILI.MAT DE RECH","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":100,"nom":"MIRANI OUAHID","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":101,"nom":"BALOUCH ABDESSAMAD","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":102,"nom":"EL HAMRI MED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"GI.NRBC","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":103,"nom":"BOUCAHIB KARIM","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257101 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":104,"nom":"AACH MED","grade":"ADJ/C","fonction":"CONDUCTEUR ET MAGASINIER","formation":"CONDUITE ENGIN POIDS LOURD NIV 1-2/S.D","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"CAMION BERCE SD","immatriculation":"174743 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":105,"nom":"BELQADI MED","grade":"ADJ/C","fonction":"MECANICIEN","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"CAMION BERCE SD","immatriculation":"174743 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":106,"nom":"ABGHAOUW AYOUB","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"S.D/GI-NRBC","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"V S I","immatriculation":"195967 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":107,"nom":"EL BARKAOUI ABDLMALEK","grade":"CAP","fonction":"CONDUCTEUR","formation":"EMT","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB EMT 2","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":108,"nom":"MOUBARAKI IMAD","grade":"SGT/C","fonction":"CHEF DE BORD","formation":"EMT","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB EMT 2","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":109,"nom":"OUCHEN AZIZ","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB EMT 2","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":110,"nom":"MANAR HAMID","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"EMT","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":111,"nom":"ABLID YOUSSEF","grade":"ADJ","fonction":"CHEF DE BORD","formation":"GI-NRBC","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":112,"nom":"BOULYAHOUI LAHCEN","grade":"ADJ","fonction":"BRANCARDIER","formation":"EMT","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":113,"nom":"HAYMOUDI ADIL","grade":"LT-COL","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"V S I","immatriculation":"195960 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":114,"nom":"KARBAL MOUSSA","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"V S I","immatriculation":"195960 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":115,"nom":"WARDI ABDELALI","grade":"ADJ","fonction":"CONDUCTEUR ET MAGASINIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"CAMION BERCE SD","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":116,"nom":"AMINE ZOUHAIR","grade":"ADJ","fonction":"CHEF D'EQUIPE","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"CAMION BERCE SD","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":117,"nom":"EL ABDI ABDLILAH","grade":"CAP","fonction":"ADJOINT CHEF EQUIPE","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"CAMION BERCE SD","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":118,"nom":"LACHEHAB ABDELLAH","grade":"CAP","fonction":"","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"CAMION BERCE SD","immatriculation":"174745 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":119,"nom":"MAJID ADIL","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":120,"nom":"GHALLAB HICHAM","grade":"ADJ","fonction":"CHEF EQUIPE 2","formation":"R.T.T.L","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":121,"nom":"TAHIR ABDELATIF","grade":"ADJ","fonction":"ADJOINT CHEF EQUIPE","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":122,"nom":"HAYLOUFA YAHYA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":123,"nom":"EL AMINE ANAS","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":124,"nom":"BENNSAIR AZZDINE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":125,"nom":"MALKI AYOUB","grade":"SGT/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":126,"nom":"SAHER BADR","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":127,"nom":"EL BOUANANI RACHID","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":128,"nom":"ZINE ZAKARIA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"R.T.TL","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":129,"nom":"TAIBANE MOHAMMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":130,"nom":"ASBIR MOHAMMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257099 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":131,"nom":"OUDOUNI KAOUTAR","grade":"MED","fonction":"MEDECIN","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB MEDICALISE","immatriculation":"239149 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":132,"nom":"EL JAAOUANI WAFAA","grade":"INF","fonction":"INFIRMIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB MEDICALISE","immatriculation":"239149 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":133,"nom":"ERRADI HAMZA","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB MEDICALISE","immatriculation":"239149 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":134,"nom":"MAHENNA ABDERRAZZAK","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB MEDICALISE","immatriculation":"239149 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":135,"nom":"FARHAT YASSIR","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":136,"nom":"LAGSIR NABIL","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":137,"nom":"KHAFIFI REDA","grade":"CAP/C","fonction":"BRANCARDIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":138,"nom":"IDRISSI OUDRHIRI MOHAMMED","grade":"COL","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"VL CDT","immatriculation":"180423 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":139,"nom":"HAJJAJI KHALID","grade":"COL","fonction":"ADJOINT CHEF DETACHEMENT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"VL CDT","immatriculation":"180423 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":140,"nom":"EL TOUALI NASSIM","grade":"LT","fonction":"CHEF EQUIPE 1","formation":"R.T.T.L","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":141,"nom":"AIDANA MED ACHRAF","grade":"ADJ","fonction":"CHEF EQUIPE 2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":142,"nom":"KOUIRI ABDELALI","grade":"ADJ","fonction":"RECHERCHE TECHNIQUE 1","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":143,"nom":"MOUJAHID MED","grade":"ADJ","fonction":"RECHERCHE TECHNIQUE 2","formation":"R.T.T.L","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":144,"nom":"SLIMANI EL MEHDI","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT E-1","formation":"R.T.T.L","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":145,"nom":"MOUADAB REDA","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT E-1","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":146,"nom":"BADDACH AYOUB","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT E-1","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":147,"nom":"AIT EL GHAZI ABDELLAH","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT E-1","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":148,"nom":"FAROUK MANIAR","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT E-2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":149,"nom":"TAMRI EL HOUCINE","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT E-2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":150,"nom":"TOUFIK MOUTIA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT E-2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":151,"nom":"OUAZANI ECHAHDI SOUFIAN","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT E-2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":152,"nom":"AIT BLOUK MED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT E-2","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257103 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":153,"nom":"TAJMOUATI ABDELFATTAH","grade":"ADJ","fonction":"CONDUCTEUR ET MAGASINIER MECANICIEN","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"CAMION BERCE SD","immatriculation":"137208 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":154,"nom":"KHERICH KHALID","grade":"ADJ","fonction":"CONDUCTEUR ET MAGASINIER MECANICIEN","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"CAMION BERCE SD","immatriculation":"137208 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":155,"nom":"SAMIR MRABBAJ","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":156,"nom":"AZAMI YOUSSEF","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":157,"nom":"JANE MOHAMMED","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":158,"nom":"BAAJ NADIA","grade":"DR","fonction":"DOCTEUR","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB MEDICALISE","immatriculation":"283244 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":159,"nom":"NGADI CHAYMA","grade":"INF","fonction":"INFIRMIER","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB MEDICALISE","immatriculation":"283244 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":160,"nom":"MALEK LAHCEN","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB MEDICALISE","immatriculation":"283244 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":161,"nom":"LOULI ACHRAF","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI FES -MEKNES","vehicule":"AMB MEDICALISE","immatriculation":"283244 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":162,"nom":"RADGUI Youssef","grade":"LT COL","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"VL CDT","immatriculation":"180428 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":163,"nom":"ISMAIL RACHID","grade":"LT COL","fonction":"ADJOINT CHEF DETACHEMENT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"VL CDT","immatriculation":"180428 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":164,"nom":"AMAQAR IMAD","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"VL CDT","immatriculation":"180428 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":165,"nom":"ZIAN MOHAMDE","grade":"ADJ","fonction":"CHEF EQUIPE 1","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":166,"nom":"EL MAOUASY REDOUANE","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":167,"nom":"NASSER ABDELLAH","grade":"SGT/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"R.T.T.L","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":168,"nom":"YAKHLEF ABDELGHANI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":169,"nom":"KBADI KHALID","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":170,"nom":"MAHBOUBI LAHCEN","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":171,"nom":"BENAZUN YOUSSEF","grade":"ADJ","fonction":"CHEF EQUIPE 2","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":172,"nom":"OUBZI NABIL","grade":"SGT/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":173,"nom":"EZZARHOUNI YOUSSEF","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":174,"nom":"KOURCHI AHMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":175,"nom":"KAROUK ELBAHI ADNANE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":176,"nom":"AJAANAN AZZEDINE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"257100 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":177,"nom":"JEBARI BRAHIM","grade":"ADJ","fonction":"CONDUCTEUR ET MAGASINIER","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"CAMION BERCE SD","immatriculation":"174744 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":178,"nom":"ALOUAN OMAR","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"CAMION BERCE SD","immatriculation":"174744 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":179,"nom":"ALAMI MED HAMEDANE","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"VSI","immatriculation":"168384 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":180,"nom":"HADDAD MOHAMMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB STANDARD","immatriculation":"229489 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":181,"nom":"EL BAKKALI MOHAMMED","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB STANDARD","immatriculation":"229489 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":182,"nom":"EL IDRISSI OUSSAMA","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB STANDARD","immatriculation":"229489 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":183,"nom":"BOUMADOUANE SAMIR","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB MEDICALISE","immatriculation":"238245 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":184,"nom":"ACHEBAK ILYAS","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB MEDICALISE","immatriculation":"238245 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":185,"nom":"TOUIL OUSSAMA","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI TANGER","unite":"UMRI TANGER","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI TANGER","vehicule":"AMB MEDICALISE","immatriculation":"238245 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":186,"nom":"ISSAOUI ABDELLATIF","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"V S I","immatriculation":"195968 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":187,"nom":"ET-TAARABTI IMAD","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"V S I","immatriculation":"195968 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":188,"nom":"AHBOUCH ABDELHAK","grade":"ADJ","fonction":"CONDUCTEUR","formation":"R.T.T.L","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":189,"nom":"CHAKIR ABDELAZIZ","grade":"ADJ/C","fonction":"CHEF EQUIPE 1","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":190,"nom":"LASRI HASSAN","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":191,"nom":"EL HACHMI AZIZ","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":192,"nom":"BIARI TARIK","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":193,"nom":"EL HADIOUI KAMAL","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":194,"nom":"BANISS MUSTAPHA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"R.T.T.L","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":195,"nom":"ZIANI RACHID","grade":"ADJ/C","fonction":"CHEF EQUIPE 2","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":196,"nom":"DKIWAK MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":197,"nom":"ASRI AHMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":198,"nom":"AFADAN MOHAMMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":199,"nom":"HAMOUMI KARIM","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":200,"nom":"MOHAMMED EL ALAMI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144092 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":201,"nom":"ZARROUDI MOHAMED","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"CAMION BERCE SD","immatriculation":"174747 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":202,"nom":"EL FENNANI ABDEFETTAH","grade":"ADJ/C","fonction":"CHEF DE BORD","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"CAMION BERCE SD","immatriculation":"174747 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":203,"nom":"MOUSTAID MOUAD","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230019 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":204,"nom":"BAIADDA AMINE","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230019 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":205,"nom":"ESSOUHI MOURAD","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Moyenne","equipe":"Equipe Moyenne UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230019 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":206,"nom":"BOUHSSINA M'BAREK","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"R.T.T.L","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"V S I","immatriculation":"195986 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":207,"nom":"BESTAMI TARIK","grade":"ADJ/C/M","fonction":"CONDUCTEUR","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"V S I","immatriculation":"195986 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":208,"nom":"AMMOURI AMMAR","grade":"ADJ/C","fonction":"CONDUCTEUR C.T SD","formation":"R.T.TL","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":209,"nom":"DAOUDI ABDELKARIM","grade":"ADJ/C","fonction":"CHEF EQUIPE 1","formation":"R.T.T.L","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":210,"nom":"MAJDI HICHAM","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":211,"nom":"ALAOUI MEHDI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":212,"nom":"ACHAROUI ABDELALI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":213,"nom":"JIBAL MEHDI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":214,"nom":"DEMNATI ADNANE","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":215,"nom":"MOUDEN MOUSTAPHA","grade":"CAP/C","fonction":"CHEF EQUIPE 2","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":216,"nom":"AHMED AHMID","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"R.T.T.L","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":217,"nom":"AKRAM YAZID SENHAJI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":218,"nom":"OULD ALI MOHAMMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":219,"nom":"OUDOUCH MOHSSINE","grade":"","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"TRANSPORT PERSONNEL MINI BUS","immatriculation":"144096 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":220,"nom":"ALAMI ABDELMOUNAIM","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"CAMION BERCE SD","immatriculation":"174742 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":221,"nom":"KAICHA MEROUAN","grade":"ADJ/C","fonction":"MAGASINIER/MECANICIEN","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"CAMION BERCE SD","immatriculation":"174742 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":222,"nom":"SIHAMEDI FOUZIA","grade":"DOCTEUR","fonction":"DOCTEUR","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB MEDICALISE","immatriculation":"238243 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":223,"nom":"BOULBOUL LAMYAE","grade":"INFEIRMEIRE","fonction":"INFERMIER","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB MEDICALISE","immatriculation":"238243 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":224,"nom":"CHHIBA EL MAHDI","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB MEDICALISE","immatriculation":"238243 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":225,"nom":"EL GHOUL ABDERRAHMANE","grade":"ADJ","fonction":"CHEF DE BORD","formation":"R.T.T.L","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB MEDICALISE","immatriculation":"238243 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":226,"nom":"ALI BOUIGUIG","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB MEDICALISE","immatriculation":"238243 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":227,"nom":"HILAL ADIL","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB STANDARD","immatriculation":"229502 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":228,"nom":"CHAABANE HATIM","grade":"ADJ","fonction":"CHEF DE BORD","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB STANDARD","immatriculation":"229502 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":229,"nom":"TALIBI ABDERAHMANE","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UNMI","unite":"UNMI","categorie":"Moyenne","equipe":"Equipe Moyenne UNMI","vehicule":"AMB STANDARD","immatriculation":"229502 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":230,"nom":"MAAROUF HAMZA","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"V S I","immatriculation":"NEANT","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":231,"nom":"ZIOUANA KAMAL","grade":"CAP/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":232,"nom":"LAADAM HASSAN","grade":"CAP","fonction":"CHEF DE BORD","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":233,"nom":"SATI MOHAMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"V S D","immatriculation":"196966 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":234,"nom":"CHIBANE MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"V S D","immatriculation":"196966 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":235,"nom":"AIT TALEB IBRAHIM","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"V S D","immatriculation":"196966 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":236,"nom":"ERRAGRAGUI AYOUB","grade":"CAP/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":237,"nom":"EL FAKKAK ALI","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":238,"nom":"HARDAZ BRAHIM","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI MARRAKECH","unite":"UMRI MARRAKECH","categorie":"Legere","equipe":"Equipe Legere UMRI MARRAKECH","vehicule":"AMB STANDARD","immatriculation":"229001 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":239,"nom":"JAZOULI MED EL MAHDI","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"V S I","immatriculation":"195972 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":240,"nom":"OUZIRAR YASSINE","grade":"CAP/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":241,"nom":"EL BADRI MORAD","grade":"ADJ/C","fonction":"CHEF DE BORD","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":242,"nom":"MERHNI YASSINE","grade":"ADJ/C CAP/C","fonction":"","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":243,"nom":"OMARI SAID","grade":"","fonction":"","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":244,"nom":"FENNI MOHAMED","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"V S D","immatriculation":"156619 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":245,"nom":"EL MAHI AHMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"V S D","immatriculation":"156619 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":246,"nom":"LAACHACHI AHMED","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"AMB STANDARD","immatriculation":"230016 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":247,"nom":"CHAOUACH ILYASS","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"AMB STANDARD","immatriculation":"230016 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":248,"nom":"SMAHI ABDERRAZAK","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI ORIENTAL","unite":"UMRI ORIENTAL","categorie":"Legere","equipe":"Equipe Legere UMRI ORIENTAL","vehicule":"AMB STANDARD","immatriculation":"230016 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":249,"nom":"LAHNOUN KHALIL","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"V S I","immatriculation":"195967 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":250,"nom":"STIOUTIOU OMAR","grade":"ADJ/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":251,"nom":"JANOU MOUSSA","grade":"ADJ","fonction":"CHEF DE BORD","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":252,"nom":"ESSOUSSI NOUREDYNE","grade":"ADJ","fonction":"","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":253,"nom":"ASSABANE MOHAMED","grade":"ADJ","fonction":"","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":254,"nom":"ABGHAOU AYOUB","grade":"CAP/C","fonction":"","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":255,"nom":"ZARRBANI CHARAFEDDINE","grade":"SGT/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"V S D","immatriculation":"144086 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":256,"nom":"HATTA JABRANE","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"V S D","immatriculation":"144086 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":257,"nom":"KALAM AZZEDINE","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":258,"nom":"SAKATE SOUFYANE","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":259,"nom":"DAOUDI ABDENNACER","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI SOUSS-MASSA","unite":"UMRI SOUSS-MASSA","categorie":"Legere","equipe":"Equipe Legere UMRI SOUSS-MASSA","vehicule":"AMB STANDARD","immatriculation":"229008 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":260,"nom":"EL MOUTAOUAKKIL MOHAMMED","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"V S I","immatriculation":"195960 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":261,"nom":"TARGHI BADER","grade":"SGT/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":262,"nom":"MEHDI BALHOU","grade":"SGT/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"V S D","immatriculation":"144082 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":263,"nom":"MOHAMED AHIZOUNE","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"V S D","immatriculation":"144082 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":264,"nom":"ACHRAF MAAZOUF","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"V S D","immatriculation":"144082 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":265,"nom":"ARRASSI AYOUB","grade":"SGT/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":266,"nom":"ES-SAKHI YASSINE","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":267,"nom":"ELOUERDI OUSSAMA","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI CASABLANCA-SETTAT","unite":"UMRI CASABLANCA-SETTAT","categorie":"Legere","equipe":"Equipe Legere UMRI CASABLANCA-SETTAT","vehicule":"AMB STANDARD","immatriculation":"228995 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":268,"nom":"EL MOUNTAFIE TAOUFIK","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"V S I","immatriculation":"195961 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":269,"nom":"EL BIRI WASSIME","grade":"SGT/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":270,"nom":"MANIAR FAROUK","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":271,"nom":"JANE MOHAMMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":272,"nom":"NAOUI KHIR ISSAM","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"V S D","immatriculation":"141344 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":273,"nom":"SLIMANI EL MEHDI","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"V S D","immatriculation":"141344 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":274,"nom":"LAZAAR HICHAM","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"V S D","immatriculation":"141344 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":275,"nom":"SAMI MOHAMMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":276,"nom":"GUERMILA IBRAHIM","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":277,"nom":"TAHAJOUT IBRAHIM","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI FES -MEKNES","unite":"UMRI FES -MEKNES","categorie":"Legere","equipe":"Equipe Legere UMRI FES -MEKNES","vehicule":"AMB STANDARD","immatriculation":"229474 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":278,"nom":"HOUSNI ANOUAR","grade":"ADJ","fonction":"CHEF DETACHEMENT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"V S I","immatriculation":"159977 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":279,"nom":"SEBBAGH OUALID","grade":"CAP","fonction":"CONDUCTEUR VL","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":280,"nom":"ABAKHOUYA MOHAMED SAID","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":281,"nom":"EL BADI MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":282,"nom":"BOUKADIDA HAMZA","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":283,"nom":"EL ASRI MOHAMED","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":284,"nom":"CHEGGARI KHALID","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"V S D","immatriculation":"144085 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":285,"nom":"BEKKALI ZAKARIA","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"V S D","immatriculation":"144085 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":286,"nom":"EL AZAR MOHAMED","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"AMB STANDARD","immatriculation":"229490 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":287,"nom":"SERBOUT MOHAMED","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"AMB STANDARD","immatriculation":"229490 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":288,"nom":"KOURCHI AHMED","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UNITE TANGER","unite":"UNITE TANGER","categorie":"Legere","equipe":"Equipe Legere UNITE TANGER","vehicule":"AMB STANDARD","immatriculation":"229490 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":289,"nom":"BOUNDIR YASSINE","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"V S I","immatriculation":"195968 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":290,"nom":"BOUTAGHOUAEN NAOUFAL","grade":"CAP/C","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":291,"nom":"EL BALLOUTI MOHAMMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":292,"nom":"LAHRAICHY BRAHIM","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":293,"nom":"FATHI SOULAYMAN","grade":"CAP","fonction":"","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":294,"nom":"EL HAMDI YOUSSEF","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"V S D","immatriculation":"156350 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":295,"nom":"AZIZ EL HACHMI","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"V S D","immatriculation":"156350 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":296,"nom":"CHAARA MOHAMMED","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230018 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":297,"nom":"HAJJI MOHAMED","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230018 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":298,"nom":"ES-SADKI ISMAIL","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI AL HOCEIMA","unite":"UMRI AL HOCEIMA","categorie":"Legere","equipe":"Equipe Legere UMRI AL HOCEIMA","vehicule":"AMB STANDARD","immatriculation":"230018 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":299,"nom":"ZIANI MED","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"V S I","immatriculation":"144773 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":300,"nom":"TOUIL YOUSSEF","grade":"ADJ","fonction":"CONDUCTEUR VL","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":301,"nom":"BOUAZAIL HASSAN","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":302,"nom":"ABDELLAOUI HASSAN","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":303,"nom":"EL KARKOURI ADIL","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":304,"nom":"MAZOUZ MED","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":305,"nom":"MELLOUKI MOUHSSIN","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"V S D","immatriculation":"149301 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":306,"nom":"TCHICOU ABDELKADER","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"V S D","immatriculation":"149301 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":307,"nom":"HJIAJ ABDELMOUNAIM","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"AMB STANDARD","immatriculation":"188255 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":308,"nom":"BOUZIZ YOUNESS","grade":"ADJ/C","fonction":"BRANCARDIER","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"AMB STANDARD","immatriculation":"188255 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":309,"nom":"HAJJI KARIM","grade":"ADJ/C","fonction":"BRANCARDIER","formation":"","region":"UNITE TAZA","unite":"UNITE TAZA","categorie":"Legere","equipe":"Equipe Legere UNITE TAZA","vehicule":"AMB STANDARD","immatriculation":"188255 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":310,"nom":"OUSSAMA AMERACHE","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"V S I","immatriculation":"184631 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":311,"nom":"ACHAHBAR MOHAMED","grade":"ADJ","fonction":"CONDUCTEUR VL","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":312,"nom":"DAHMAN AZEDDINE","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":313,"nom":"FIKRI MAAROUFI","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":314,"nom":"DIRA HAYTAM","grade":"ADJ","fonction":"","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":315,"nom":"EL MARZQKIOUI JAWAD","grade":"ADJ","fonction":"","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":316,"nom":"AZOUAGH AISSA","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"V S D","immatriculation":"156351 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":317,"nom":"LHAMASS NABIL","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"V S D","immatriculation":"156351 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":318,"nom":"NASSIH MUSTAPHA","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"AMB STANDARD","immatriculation":"176129 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":319,"nom":"TINZGHINE TARIK","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"AMB STANDARD","immatriculation":"176129 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":320,"nom":"DKIWAK MOHAMED","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UNITE AL HOUCEIMA","unite":"UNITE AL HOUCEIMA","categorie":"Legere","equipe":"Equipe Legere UNITE AL HOUCEIMA","vehicule":"AMB STANDARD","immatriculation":"176129 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":321,"nom":"CHLIH JIHAD","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"V S I","immatriculation":"184643 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":322,"nom":"EL OUARDI MOHAMED","grade":"ADJ","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":323,"nom":"ZIANI AYOUB","grade":"CAP/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":324,"nom":"KHIBI HASSAN","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":325,"nom":"TABAA MED","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"V S D","immatriculation":"144081 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":326,"nom":"OUAOUA MOHCIN","grade":"CAP","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"V S D","immatriculation":"144081 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":327,"nom":"EL KOUCHI NABIL","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"V S D","immatriculation":"144081 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":328,"nom":"BJIOUI ACHRAF","grade":"CAP","fonction":"CONDUCTEUR","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"AMB STANDARD","immatriculation":"228991 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":329,"nom":"KOUIKA ABDENNASSER","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"AMB STANDARD","immatriculation":"228991 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":330,"nom":"ENNASSI AZDINE","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI RABAT-SALE -KENITRA","unite":"UMRI RABAT-SALE -KENITRA","categorie":"Legere","equipe":"Equipe Legere UMRI RABAT-SALE -KENITRA","vehicule":"AMB STANDARD","immatriculation":"228991 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":331,"nom":"CHEBBI ABDELATIF","grade":"LT","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"V S I","immatriculation":"184684 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":332,"nom":"AIT BAHOU ZAKARYAE","grade":"ADJ","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":333,"nom":"SAMGHOULI MOHAMED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":334,"nom":"AZIZI IBRAHIM","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":335,"nom":"SAHLI MOHAMED","grade":"ADJ","fonction":"","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":336,"nom":"GHAFIRI ABDERRAZAQ","grade":"CAP","fonction":"","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":337,"nom":"YOUSSFI JALAL","grade":"ADJ/C","fonction":"CONDUCTEUR","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"V S D","immatriculation":"144084 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":338,"nom":"BOUNAM SMAIL","grade":"ADJ/C","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"V S D","immatriculation":"144084 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":339,"nom":"SAOUD REDOUAN","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"AMB STANDARD","immatriculation":"229483 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":340,"nom":"ANAAM ASSOU","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"AMB STANDARD","immatriculation":"229483 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":341,"nom":"BOUMZOUGH HAMZA","grade":"CAP","fonction":"BRANCARDIER","formation":"","region":"UMRI DRAA- TAFILALET","unite":"UMRI DRAA- TAFILALET","categorie":"Legere","equipe":"Equipe Legere UMRI DRAA- TAFILALET","vehicule":"AMB STANDARD","immatriculation":"229483 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":342,"nom":"ARAB MOHAMMED","grade":"ADJ/C","fonction":"CHEF DETACHEMENT","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"V S I","immatriculation":"184636 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":343,"nom":"EL YAHYAOUI MOUNIR","grade":"ADJ","fonction":"CONDUCTEUR VL","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":344,"nom":"KHATIB YOUSSEF","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":345,"nom":"ARRAFIAAI MED","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":346,"nom":"AIT ALAOUIA MED","grade":"ADJ","fonction":"","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":347,"nom":"EL KHALIFI MOHAMMED","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"V S D","immatriculation":"129337 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":348,"nom":"AKABLY IMAD","grade":"ADJ","fonction":"SAUVETEUR ET DEBLAYANT","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"V S D","immatriculation":"129337 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":349,"nom":"NASEF ABDESAMAD","grade":"ADJ","fonction":"","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"V S D","immatriculation":"129337 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":350,"nom":"MESTOUR ABDLILAH","grade":"ADJ","fonction":"CONDUCTEUR","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"AMB STANDARD","immatriculation":"200718 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":351,"nom":"EZZAROUALI ABDELILAH","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"AMB STANDARD","immatriculation":"200718 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":352,"nom":"SAJID MOHAMMED","grade":"ADJ","fonction":"BRANCARDIER","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"AMB STANDARD","immatriculation":"200718 PC","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""},{"id":353,"nom":"RECAP","grade":"","fonction":"","formation":"","region":"UMRI BENI MELLAL-KHENIFRA","unite":"UMRI BENI MELLAL-KHENIFRA","categorie":"Legere","equipe":"Equipe Legere UMRI BENI MELLAL-KHENIFRA","vehicule":"","immatriculation":"","telephone":"","cin":"","passeport_num":"","passeport_validite":"","date_naissance":"","notes":""}];
+
+const GRADE_LABELS = {
+  'CDT':'Commandant', 'LT':'Lieutenant', 'LT COL':'Lieutenant‑Colonel', 'LT/COL':'Lieutenant‑Colonel',
+  'LT-COL':'Lieutenant‑Colonel', 'COL':'Colonel', 'CNE':'Capitaine', 'ADJ':'Adjudant', 'ADJ/C':'Adjudant‑Chef',
+  'ADJ/CM':'Adjudant‑Chef Major', 'ADJ/C/M':'Adjudant‑Chef Major', 'CAP':'Caporal', 'CAP/C':'Caporal‑Chef',
+  'SGT/C':'Sergent‑Chef', 'A/C':'Adjudant‑Chef', 'A/C/M':'Adjudant‑Chef Major', 'DR':'Docteur', 'MED':'Médecin',
+  'DOCTEUR':'Docteur', 'INF':'Infirmier', 'INFEIRMEIRE':'Infirmier(ère)'
+};
+
+/* ============================================================
+   STORAGE LAYER
+   ============================================================ */
+const STORAGE_KEY = 'sd_nat_overrides_v1';
+let overrides = { edits:{}, added:[], deleted:[] };
+let storageAvailable = true;
+try{
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw) overrides = JSON.parse(raw);
+}catch(e){ storageAvailable = false; }
+
+function persist(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+  }catch(e){ storageAvailable = false; }
+}
+
+let nextId = Math.max(0, ...BASE_PEOPLE.map(p=>p.id), ...overrides.added.map(p=>p.id)) + 1;
+
+function getPeople(){
+  const deleted = new Set(overrides.deleted);
+  const list = BASE_PEOPLE
+    .filter(p=>!deleted.has(p.id))
+    .map(p=> overrides.edits[p.id] ? {...p, ...overrides.edits[p.id]} : p);
+  const added = overrides.added.filter(p=>!deleted.has(p.id));
+  return list.concat(added);
+}
+
+function savePerson(data){
+  if(data.id && (BASE_PEOPLE.some(p=>p.id===data.id) )){
+    overrides.edits[data.id] = data;
+  } else if(data.id && overrides.added.some(p=>p.id===data.id)){
+    overrides.added = overrides.added.map(p=>p.id===data.id?data:p);
+  } else {
+    data.id = nextId++;
+    overrides.added.push(data);
+  }
+  persist();
+}
+
+function deletePerson(id){
+  overrides.deleted.push(id);
+  persist();
+}
+
+function resetAllData(){
+  overrides = { edits:{}, added:[], deleted:[] };
+  persist();
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function esc(s){ return (s===undefined||s===null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function catClass(cat){ return cat==='Lourde'?'lourde':cat==='Moyenne'?'moyenne':'legere'; }
+function gradeLabel(g){ return GRADE_LABELS[g] || g || '—'; }
+function uniqueSorted(arr){ return [...new Set(arr)].filter(Boolean).sort((a,b)=>a.localeCompare(b)); }
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr); if(isNaN(d)) return null;
+  return Math.floor((d - new Date())/86400000);
+}
+function passportStatus(p){
+  if(!p.passeport_num && !p.passeport_validite) return {label:'À renseigner', cls:'status-missing'};
+  if(!p.passeport_validite) return {label:'Validité manquante', cls:'status-missing'};
+  const d = daysUntil(p.passeport_validite);
+  if(d===null) return {label:'À renseigner', cls:'status-missing'};
+  if(d<0) return {label:'Expiré', cls:'status-expired'};
+  if(d<=90) return {label:'Expire bientôt', cls:'status-warn'};
+  return {label:'Valide', cls:'status-ok'};
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+const NAV = [
+  {id:'dashboard', label:'Tableau de bord', icon:'grid', group:'Vue d’ensemble'},
+  {id:'equipes', label:'Équipes', icon:'users', group:'Vue d’ensemble'},
+  {id:'personnel', label:'Personnel', icon:'id', group:'Données'},
+  {id:'vehicules', label:'Véhicules & matériel', icon:'truck', group:'Données'},
+  {id:'region', label:'Synthèse par région', icon:'map', group:'Synthèses'},
+  {id:'grade', label:'Synthèse par grade', icon:'star', group:'Synthèses'},
+  {id:'alertes', label:'Alertes documents', icon:'alert', group:'Synthèses'},
+];
+const ICONS = {
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  id:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M4 18c1-2 3-3 4-3s3 1 4 3"/><path d="M14 9h6M14 13h6"/></svg>',
+  truck:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="14" height="11" rx="1"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="5.5" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/></svg>',
+  map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 1 21h22z"/><path d="M12 9v5M12 17h.01"/></svg>',
+};
+
+let currentView = 'dashboard';
+let equipeTab = 'Toutes';
+let personnelFilters = { q:'', region:'', categorie:'', grade:'' };
+let sortState = {key:'nom', dir:1};
+
+function renderNav(){
+  const groups = {};
+  NAV.forEach(n=>{ (groups[n.group]=groups[n.group]||[]).push(n); });
+  let html='';
+  Object.keys(groups).forEach(g=>{
+    html += `<div class="navgroup-label">${g}</div>`;
+    groups[g].forEach(n=>{
+      html += `<button data-view="${n.id}" class="${currentView===n.id?'active':''}">${ICONS[n.icon]}<span>${n.label}</span></button>`;
+    });
+  });
+  document.getElementById('navlist').innerHTML = html;
+  document.querySelectorAll('#navlist button').forEach(b=>{
+    b.addEventListener('click', ()=>{ currentView=b.dataset.view; render(); });
+  });
+}
+
+/* ============================================================
+   RENDER — DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  const people = getPeople();
+  const cats = ['Lourde','Moyenne','Legere'];
+  const total = people.length;
+  const byCat = {}; cats.forEach(c=>byCat[c]=people.filter(p=>p.categorie===c).length);
+  const equipesSet = new Set(people.map(p=>p.equipe));
+  const vehSet = new Set(people.map(p=>p.vehicule+'|'+p.immatriculation));
+  const regions = uniqueSorted(people.map(p=>p.region));
+  const missingDocs = people.filter(p=>passportStatus(p).cls!=='status-ok').length;
+
+  let html = `<div class="grid-kpi">
+    <div class="kpi"><div class="label">Effectif total</div><div class="value">${total}</div><div class="foot">${equipesSet.size} équipes actives</div></div>
+    <div class="kpi accent-lourde"><div class="label">Équipes lourdes</div><div class="value">${byCat.Lourde} <small>agents</small></div><div class="foot">USAR national</div></div>
+    <div class="kpi accent-moyenne"><div class="label">Équipes moyennes</div><div class="value">${byCat.Moyenne} <small>agents</small></div><div class="foot">Niveau régional (UMRI)</div></div>
+    <div class="kpi accent-legere"><div class="label">Équipes légères</div><div class="value">${byCat.Legere} <small>agents</small></div><div class="foot">Premiers secours locaux</div></div>
+    <div class="kpi"><div class="label">Véhicules recensés</div><div class="value">${vehSet.size}</div><div class="foot">${regions.length} régions couvertes</div></div>
+    <div class="kpi"><div class="label">Documents à jour</div><div class="value" style="color:${missingDocs>0?'var(--moyenne)':'var(--legere)'}">${total-missingDocs}<small>/${total}</small></div><div class="foot">${missingDocs} dossiers à compléter</div></div>
+  </div>`;
+
+  html += `<div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><h3>Répartition par région</h3><span class="hint">effectifs</span></div>
+      <div class="panel-body" id="regionBars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Répartition par catégorie</h3></div>
+      <div class="panel-body">
+        ${cats.map(c=>{
+          const n=byCat[c]; const pct= total? Math.round(n/total*100):0;
+          const label = c==='Legere'?'Légère':c;
+          return `<div class="barrow"><div class="name"><span class="badge ${catClass(c)}">${label}</span></div>
+            <div class="track"><div class="fill" style="width:${pct}%; background:var(--${catClass(c)})"></div></div>
+            <div class="num">${n}</div></div>`;
+        }).join('')}
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--muted); line-height:1.6;">
+          <b style="color:var(--ink)">02</b> équipes lourdes (USAR national) · <b style="color:var(--ink)">08</b> équipes moyennes régionales · <b style="color:var(--ink)">12</b> équipes légères locales.
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  html += `<div class="panel">
+    <div class="panel-head"><h3>Grades les plus représentés</h3></div>
+    <div class="panel-body" id="gradeBars" style="display:grid; grid-template-columns:1fr 1fr; gap:0 24px;"></div>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  // region bars
+  const regCounts = regions.map(r=>({r, n:people.filter(p=>p.region===r).length})).sort((a,b)=>b.n-a.n);
+  const maxR = Math.max(...regCounts.map(x=>x.n),1);
+  document.getElementById('regionBars').innerHTML = regCounts.map(x=>`
+    <div class="barrow"><div class="name" title="${esc(x.r)}">${esc(x.r)}</div>
+      <div class="track"><div class="fill" style="width:${x.n/maxR*100}%; background:var(--accent)"></div></div>
+      <div class="num">${x.n}</div></div>`).join('');
+
+  // grade bars
+  const gradeCounts = {};
+  people.forEach(p=>{ if(p.grade) gradeCounts[p.grade]=(gradeCounts[p.grade]||0)+1; });
+  const gArr = Object.entries(gradeCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxG = Math.max(...gArr.map(x=>x[1]),1);
+  document.getElementById('gradeBars').innerHTML = gArr.map(([g,n])=>`
+    <div class="barrow"><div class="name">${esc(gradeLabel(g))} <span class="mono" style="color:var(--muted)">(${esc(g)})</span></div>
+      <div class="track"><div class="fill" style="width:${n/maxG*100}%; background:var(--ink-soft)"></div></div>
+      <div class="num">${n}</div></div>`).join('');
+}
+
+/* ============================================================
+   RENDER — EQUIPES
+   ============================================================ */
+function renderEquipes(){
+  const people = getPeople();
+  const cats = ['Toutes','Lourde','Moyenne','Legere'];
+  let html = `<div class="tabs">${cats.map(c=>`<button data-cat="${c}" class="${equipeTab===c?'active':''}">${c==='Legere'?'Légère':c==='Toutes'?'Toutes':c}</button>`).join('')}</div>`;
+
+  const filtered = equipeTab==='Toutes'? people : people.filter(p=>p.categorie===equipeTab);
+  const groups = {};
+  filtered.forEach(p=>{
+    const key = p.equipe;
+    if(!groups[key]) groups[key] = {equipe:key, region:p.region, categorie:p.categorie, people:[], vehicules:{}};
+    groups[key].people.push(p);
+    const vk = p.vehicule||'—';
+    groups[key].vehicules[vk] = groups[key].vehicules[vk] || {immat:p.immatriculation, count:0};
+    groups[key].vehicules[vk].count++;
+  });
+  const teamArr = Object.values(groups).sort((a,b)=>a.equipe.localeCompare(b.equipe));
+
+  html += `<div class="team-grid">`;
+  teamArr.forEach(t=>{
+    const cls = catClass(t.categorie);
+    const label = t.categorie==='Legere'?'Légère':t.categorie;
+    html += `<div class="team-card">
+      <div class="tc-head">
+        <div><h4>${esc(t.equipe)}</h4><div class="region">${esc(t.region)}</div></div>
+        <span class="badge ${cls}">${label}</span>
+      </div>
+      <div class="tc-stats">
+        <div><b>${t.people.length}</b>agents</div>
+        <div><b>${Object.keys(t.vehicules).length}</b>véhicules</div>
+      </div>
+      <div class="tc-vehicles">
+        ${Object.entries(t.vehicules).map(([v,info])=>`<div class="veh"><span>${esc(v)} ${info.count>1?`×${info.count}`:''}</span><span class="im">${esc(info.immat||'')}</span></div>`).join('') || '<div class="veh"><span>—</span></div>'}
+      </div>
+      <div class="tc-foot"><a data-openteam="${esc(t.equipe)}">Voir le personnel →</a></div>
+    </div>`;
+  });
+  html += `</div>`;
+  if(teamArr.length===0){ html += emptyState('Aucune équipe pour ce filtre.'); }
+
+  document.getElementById('content').innerHTML = html;
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click', ()=>{ equipeTab=b.dataset.cat; render(); }));
+  document.querySelectorAll('[data-openteam]').forEach(a=>a.addEventListener('click', ()=>{
+    currentView='personnel'; personnelFilters={q:'', region:'', categorie:'', grade:''};
+    personnelFilters.equipeExact = a.dataset.openteam;
+    render();
+  }));
+}
+
+function emptyState(msg){
+  return `<div class="empty-state">${ICONS.alert.replace('currentColor','#c7cedb')}<div>${esc(msg)}</div></div>`;
+}
+
+/* ============================================================
+   RENDER — PERSONNEL
+   ============================================================ */
+function renderPersonnel(){
+  const all = getPeople();
+  const regions = uniqueSorted(all.map(p=>p.region));
+  const grades = uniqueSorted(all.map(p=>p.grade));
+
+  let html = `<div class="filters">
+    <input type="text" id="fq" placeholder="Rechercher un nom, une fonction…" value="${esc(personnelFilters.q)}">
+    <select id="fregion"><option value="">Toutes régions</option>${regions.map(r=>`<option value="${esc(r)}" ${personnelFilters.region===r?'selected':''}>${esc(r)}</option>`).join('')}</select>
+    <select id="fcat"><option value="">Toutes catégories</option>
+      <option value="Lourde" ${personnelFilters.categorie==='Lourde'?'selected':''}>Lourde</option>
+      <option value="Moyenne" ${personnelFilters.categorie==='Moyenne'?'selected':''}>Moyenne</option>
+      <option value="Legere" ${personnelFilters.categorie==='Legere'?'selected':''}>Légère</option>
+    </select>
+    <select id="fgrade"><option value="">Tous grades</option>${grades.map(g=>`<option value="${esc(g)}" ${personnelFilters.grade===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
+    <div class="spacer"></div>
+    <div class="resultcount" id="resultCount"></div>
+  </div>
+  <div class="table-scroll"><table class="data">
+    <thead><tr>
+      <th data-sort="nom">Nom</th><th data-sort="grade">Grade</th><th data-sort="fonction">Fonction</th>
+      <th data-sort="region">Région / Unité</th><th data-sort="categorie">Équipe</th><th data-sort="telephone">Téléphone</th>
+      <th data-sort="passeport_validite">Passeport</th><th></th>
+    </tr></thead>
+    <tbody id="personnelBody"></tbody>
+  </table></div>`;
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('fq').addEventListener('input', e=>{ personnelFilters.q=e.target.value; delete personnelFilters.equipeExact; renderPersonnelBody(); });
+  document.getElementById('fregion').addEventListener('change', e=>{ personnelFilters.region=e.target.value; delete personnelFilters.equipeExact; renderPersonnelBody(); });
+  document.getElementById('fcat').addEventListener('change', e=>{ personnelFilters.categorie=e.target.value; delete personnelFilters.equipeExact; renderPersonnelBody(); });
+  document.getElementById('fgrade').addEventListener('change', e=>{ personnelFilters.grade=e.target.value; delete personnelFilters.equipeExact; renderPersonnelBody(); });
+  document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click', ()=>{
+    const k=th.dataset.sort;
+    if(sortState.key===k) sortState.dir*=-1; else { sortState.key=k; sortState.dir=1; }
+    renderPersonnelBody();
+  }));
+  renderPersonnelBody();
+}
+
+function applyPersonnelFilters(list){
+  let out = list;
+  if(personnelFilters.equipeExact) out = out.filter(p=>p.equipe===personnelFilters.equipeExact);
+  if(personnelFilters.q){
+    const q = personnelFilters.q.toLowerCase();
+    out = out.filter(p=> (p.nom+' '+p.fonction+' '+p.grade).toLowerCase().includes(q));
+  }
+  if(personnelFilters.region) out = out.filter(p=>p.region===personnelFilters.region);
+  if(personnelFilters.categorie) out = out.filter(p=>p.categorie===personnelFilters.categorie);
+  if(personnelFilters.grade) out = out.filter(p=>p.grade===personnelFilters.grade);
+  return out;
+}
+
+function renderPersonnelBody(){
+  const all = getPeople();
+  let list = applyPersonnelFilters(all);
+  list = list.slice().sort((a,b)=>{
+    const k=sortState.key;
+    const av=(a[k]||'').toString(), bv=(b[k]||'').toString();
+    return av.localeCompare(bv)*sortState.dir;
+  });
+  document.getElementById('resultCount').textContent = `${list.length} / ${all.length} agents`;
+  const cls = catClass;
+  document.getElementById('personnelBody').innerHTML = list.map(p=>{
+    const st = passportStatus(p);
+    return `<tr data-id="${p.id}">
+      <td class="name-cell">${esc(p.nom)}${p.formation?`<div class="sub-cell">${esc(p.formation)}</div>`:''}</td>
+      <td><span class="mono">${esc(p.grade||'—')}</span></td>
+      <td>${esc(p.fonction||'—')}</td>
+      <td>${esc(p.region)}<div class="sub-cell">${esc(p.equipe)}</div></td>
+      <td><span class="badge ${cls(p.categorie)}">${p.categorie==='Legere'?'Légère':p.categorie}</span></td>
+      <td class="mono">${esc(p.telephone||'—')}</td>
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td class="actions-cell"><button class="btn sm" data-edit="${p.id}">Modifier</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8">${emptyState('Aucun résultat pour ces filtres.')}</td></tr>`;
+
+  document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openPersonModal(parseInt(b.dataset.edit))));
+}
+
+/* ============================================================
+   RENDER — VEHICULES
+   ============================================================ */
+function renderVehicules(){
+  const people = getPeople();
+  const groups = {};
+  people.forEach(p=>{
+    const key = (p.vehicule||'—')+'|'+(p.immatriculation||'')+'|'+p.equipe;
+    if(!groups[key]) groups[key] = {vehicule:p.vehicule||'—', immat:p.immatriculation, equipe:p.equipe, region:p.region, categorie:p.categorie, count:0};
+    groups[key].count++;
+  });
+  const arr = Object.values(groups).sort((a,b)=> a.region.localeCompare(b.region) || a.equipe.localeCompare(b.equipe));
+  let html = `<div class="table-scroll"><table class="data">
+    <thead><tr><th>Type d'engin</th><th>Immatriculation</th><th>Équipe</th><th>Région</th><th>Catégorie</th><th>Personnel affecté</th></tr></thead>
+    <tbody>${arr.map(v=>`<tr>
+      <td class="name-cell">${esc(v.vehicule)}</td>
+      <td class="mono">${esc(v.immat||'—')}</td>
+      <td>${esc(v.equipe)}</td>
+      <td>${esc(v.region)}</td>
+      <td><span class="badge ${catClass(v.categorie)}">${v.categorie==='Legere'?'Légère':v.categorie}</span></td>
+      <td class="mono">${v.count}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* ============================================================
+   RENDER — REGION SYNTHESIS
+   ============================================================ */
+function renderRegionSynthese(){
+  const people = getPeople();
+  const regions = uniqueSorted(people.map(p=>p.region));
+  const rows = regions.map(r=>{
+    const sub = people.filter(p=>p.region===r);
+    const veh = new Set(sub.map(p=>p.vehicule+'|'+p.immatriculation)).size;
+    return {
+      region:r, total:sub.length,
+      lourde: sub.filter(p=>p.categorie==='Lourde').length,
+      moyenne: sub.filter(p=>p.categorie==='Moyenne').length,
+      legere: sub.filter(p=>p.categorie==='Legere').length,
+      vehicules: veh,
+      equipes: new Set(sub.map(p=>p.equipe)).size,
+    };
+  }).sort((a,b)=>b.total-a.total);
+
+  let html = `<div class="table-scroll"><table class="data">
+    <thead><tr><th>Région / Unité</th><th>Équipes</th><th>Lourde</th><th>Moyenne</th><th>Légère</th><th>Total effectif</th><th>Véhicules</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td class="name-cell">${esc(r.region)}</td>
+      <td class="mono">${r.equipes}</td>
+      <td class="mono" style="color:var(--lourde)">${r.lourde||'—'}</td>
+      <td class="mono" style="color:var(--moyenne)">${r.moyenne||'—'}</td>
+      <td class="mono" style="color:var(--legere)">${r.legere||'—'}</td>
+      <td class="mono"><b>${r.total}</b></td>
+      <td class="mono">${r.vehicules}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* ============================================================
+   RENDER — GRADE SYNTHESIS
+   ============================================================ */
+function renderGradeSynthese(){
+  const people = getPeople();
+  const grades = uniqueSorted(people.map(p=>p.grade));
+  const rows = grades.map(g=>{
+    const sub = people.filter(p=>p.grade===g);
+    return {
+      grade:g, label: gradeLabel(g), total:sub.length,
+      lourde: sub.filter(p=>p.categorie==='Lourde').length,
+      moyenne: sub.filter(p=>p.categorie==='Moyenne').length,
+      legere: sub.filter(p=>p.categorie==='Legere').length,
+    };
+  }).sort((a,b)=>b.total-a.total);
+  let html = `<div class="table-scroll"><table class="data">
+    <thead><tr><th>Grade</th><th>Libellé</th><th>Lourde</th><th>Moyenne</th><th>Légère</th><th>Total</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td class="name-cell mono">${esc(r.grade)}</td>
+      <td>${esc(r.label)}</td>
+      <td class="mono" style="color:var(--lourde)">${r.lourde||'—'}</td>
+      <td class="mono" style="color:var(--moyenne)">${r.moyenne||'—'}</td>
+      <td class="mono" style="color:var(--legere)">${r.legere||'—'}</td>
+      <td class="mono"><b>${r.total}</b></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* ============================================================
+   RENDER — ALERTES
+   ============================================================ */
+function renderAlertes(){
+  const people = getPeople();
+  const withStatus = people.map(p=>({p, st:passportStatus(p)}));
+  const missing = withStatus.filter(x=>x.st.cls==='status-missing');
+  const expiring = withStatus.filter(x=>x.st.cls==='status-warn');
+  const expired = withStatus.filter(x=>x.st.cls==='status-expired');
+
+  let html = `<div class="grid-kpi">
+    <div class="kpi"><div class="label">Passeports expirés</div><div class="value" style="color:var(--danger)">${expired.length}</div></div>
+    <div class="kpi"><div class="label">Expirent sous 90 jours</div><div class="value" style="color:var(--warn)">${expiring.length}</div></div>
+    <div class="kpi"><div class="label">Information manquante</div><div class="value" style="color:var(--muted)">${missing.length}</div></div>
+  </div>`;
+
+  function section(title, arr){
+    if(!arr.length) return '';
+    return `<div class="panel"><div class="panel-head"><h3>${esc(title)}</h3><span class="hint">${arr.length} agent(s)</span></div>
+      <div class="table-scroll"><table class="data">
+      <thead><tr><th>Nom</th><th>Grade</th><th>Région</th><th>N° Passeport</th><th>Validité</th><th></th></tr></thead>
+      <tbody>${arr.map(x=>`<tr>
+        <td class="name-cell">${esc(x.p.nom)}</td><td class="mono">${esc(x.p.grade||'—')}</td>
+        <td>${esc(x.p.region)}</td><td class="mono">${esc(x.p.passeport_num||'—')}</td>
+        <td class="mono">${esc(x.p.passeport_validite||'—')}</td>
+        <td><button class="btn sm" data-edit="${x.p.id}">Compléter</button></td>
+      </tr>`).join('')}</tbody></table></div></div>`;
+  }
+  html += section('Passeports expirés', expired);
+  html += section('Passeports expirant sous 90 jours', expiring);
+  html += section('Informations manquantes', missing);
+  if(!expired.length && !expiring.length && !missing.length) html += emptyState('Tous les dossiers sont à jour.');
+
+  document.getElementById('content').innerHTML = html;
+  document.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openPersonModal(parseInt(b.dataset.edit))));
+}
+
+/* ============================================================
+   MODAL — ADD / EDIT PERSON
+   ============================================================ */
+function personFieldsForm(p){
+  p = p || {nom:'',grade:'',fonction:'',region:'',unite:'',categorie:'Legere',equipe:'',vehicule:'',immatriculation:'',telephone:'',cin:'',passeport_num:'',passeport_validite:'',date_naissance:'',notes:''};
+  return `<div class="form-grid">
+    <div class="field"><label>Nom complet</label><input id="f_nom" value="${esc(p.nom)}"></div>
+    <div class="field"><label>Grade</label><input id="f_grade" value="${esc(p.grade)}" placeholder="ADJ, CAP/C, LT…"></div>
+    <div class="field"><label>Fonction</label><input id="f_fonction" value="${esc(p.fonction)}"></div>
+    <div class="field"><label>Téléphone</label><input id="f_telephone" value="${esc(p.telephone)}"></div>
+    <div class="field"><label>Catégorie d'équipe</label>
+      <select id="f_categorie">
+        <option value="Lourde" ${p.categorie==='Lourde'?'selected':''}>Lourde</option>
+        <option value="Moyenne" ${p.categorie==='Moyenne'?'selected':''}>Moyenne</option>
+        <option value="Legere" ${p.categorie==='Legere'?'selected':''}>Légère</option>
+      </select>
+    </div>
+    <div class="field"><label>Équipe</label><input id="f_equipe" value="${esc(p.equipe)}" placeholder="Equipe Moyenne UMRI ..."></div>
+    <div class="field"><label>Région / Unité</label><input id="f_region" value="${esc(p.region)}"></div>
+    <div class="field"><label>Véhicule affecté</label><input id="f_vehicule" value="${esc(p.vehicule)}"></div>
+    <div class="field"><label>Immatriculation</label><input id="f_immatriculation" value="${esc(p.immatriculation)}"></div>
+
+    <div class="field section-label"><span>Documents & identité</span></div>
+    <div class="field"><label>CIN</label><input id="f_cin" value="${esc(p.cin)}"></div>
+    <div class="field"><label>Date de naissance</label><input type="date" id="f_date_naissance" value="${esc(p.date_naissance)}"></div>
+    <div class="field"><label>N° Passeport</label><input id="f_passeport_num" value="${esc(p.passeport_num)}"></div>
+    <div class="field"><label>Validité du passeport</label><input type="date" id="f_passeport_validite" value="${esc(p.passeport_validite)}"></div>
+    <div class="field full"><label>Notes</label><textarea id="f_notes" rows="2">${esc(p.notes)}</textarea></div>
+  </div>`;
+}
+
+function openPersonModal(id){
+  const all = getPeople();
+  const p = id ? all.find(x=>x.id===id) : null;
+  document.getElementById('modalTitle').textContent = p ? 'Modifier — '+p.nom : 'Ajouter un agent';
+  document.getElementById('modalBody').innerHTML = personFieldsForm(p);
+  document.getElementById('modalDelete').style.display = p ? 'inline-flex' : 'none';
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.add('open');
+  overlay.dataset.editId = p ? p.id : '';
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function collectForm(){
+  const g = id=>document.getElementById(id).value.trim();
+  return {
+    nom:g('f_nom'), grade:g('f_grade'), fonction:g('f_fonction'), telephone:g('f_telephone'),
+    categorie:g('f_categorie'), equipe:g('f_equipe'), region:g('f_region'), unite:g('f_region'),
+    vehicule:g('f_vehicule'), immatriculation:g('f_immatriculation'), cin:g('f_cin'),
+    date_naissance:g('f_date_naissance'), passeport_num:g('f_passeport_num'), passeport_validite:g('f_passeport_validite'),
+    notes:g('f_notes'), formation:''
+  };
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+document.getElementById('modalSave').addEventListener('click', ()=>{
+  const data = collectForm();
+  if(!data.nom){ showToast('Le nom est obligatoire.'); return; }
+  const overlay = document.getElementById('modalOverlay');
+  const editId = overlay.dataset.editId;
+  if(editId) data.id = parseInt(editId);
+  savePerson(data);
+  closeModal();
+  showToast('Fiche enregistrée.');
+  render();
+});
+document.getElementById('modalDelete').addEventListener('click', ()=>{
+  const overlay = document.getElementById('modalOverlay');
+  const editId = overlay.dataset.editId;
+  if(editId && confirm('Supprimer définitivement cette fiche ?')){
+    deletePerson(parseInt(editId));
+    closeModal();
+    showToast('Fiche supprimée.');
+    render();
+  }
+});
+document.getElementById('btnAddPerson').addEventListener('click', ()=>openPersonModal(null));
+
+/* ============================================================
+   EXPORT / IMPORT
+   ============================================================ */
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const data = getPeople();
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sd_nat_personnel_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Export généré.');
+});
+document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    try{
+      const arr = JSON.parse(evt.target.result);
+      if(!Array.isArray(arr)) throw new Error('format');
+      overrides = { edits:{}, added:[], deleted: BASE_PEOPLE.map(p=>p.id) };
+      arr.forEach(p=>{ if(!p.id) p.id = nextId++; overrides.added.push(p); });
+      persist();
+      showToast('Import réussi — '+arr.length+' fiches chargées.');
+      render();
+    }catch(err){ showToast('Fichier JSON invalide.'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+const TITLES = {
+  dashboard:['Tableau de bord','Vue d’ensemble des équipes nationales'],
+  equipes:['Équipes','Composition et articulation par équipe'],
+  personnel:['Personnel','Fiches individuelles — recherche, filtres, édition'],
+  vehicules:['Véhicules & matériel','Moyens matériels par équipe et région'],
+  region:['Synthèse par région','Effectifs et moyens agrégés par région / unité'],
+  grade:['Synthèse par grade','Répartition des effectifs par grade et catégorie'],
+  alertes:['Alertes documents','Passeports et informations manquantes ou à renouveler'],
+};
+
+function render(){
+  renderNav();
+  const [title,sub] = TITLES[currentView];
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageSub').textContent = sub;
+  document.getElementById('footCount').textContent = getPeople().length;
+  if(currentView==='dashboard') renderDashboard();
+  else if(currentView==='equipes') renderEquipes();
+  else if(currentView==='personnel') renderPersonnel();
+  else if(currentView==='vehicules') renderVehicules();
+  else if(currentView==='region') renderRegionSynthese();
+  else if(currentView==='grade') renderGradeSynthese();
+  else if(currentView==='alertes') renderAlertes();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+document.getElementById('hamburger').addEventListener('click', ()=>document.getElementById('sidebar').classList.toggle('open'));
+
+if(!storageAvailable){
+  setTimeout(()=>showToast('Stockage local indisponible — pensez à exporter vos modifications.'), 800);
+}
+
+render();
+</script>
+</body>
+</html>
